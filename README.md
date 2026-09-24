@@ -23,3 +23,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/fakee62890-tech/task1-aws-cl
 Enter the AWS RDS hostname when prompted. The script resolves its IPv4 address with `dig`, then creates the `mysql-rds-source` MySQL connection profile in `us-west1` using port `3306`, username `admin`, and the lab password (default `changeme`). It does not store credentials.
 
 The remaining migration-job wizard steps require the destination Cloud SQL instance details and should be completed after the lab provides them.
+
+## Full Task 2 — Create the one-time migration job
+
+The full helper verifies the existing `mysql-cloudsql` destination instance, creates the source profile if needed, and prints the exact Google Cloud console values for the remaining wizard steps. Run:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/fakee62890-tech/task1-aws-cli/master/task2-full-migration-job.sh)
+```
+
+The script intentionally does not start the migration or modify the AWS RDS allowlist. Copy the destination outgoing IP addresses from the wizard and keep the job in draft state for Task 3.
