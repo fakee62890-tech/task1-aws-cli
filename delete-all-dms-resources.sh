@@ -43,14 +43,14 @@ for job in "${JOBS[@]}"; do
   [[ -n "$job" ]] || continue
   echo "Deleting migration job: $job"
   gcloud database-migration migration-jobs delete "$job" \
-    --project="$PROJECT_ID" --region="$REGION" --quiet --no-async
+    --project="$PROJECT_ID" --region="$REGION" --quiet
 done
 
 for profile in "${PROFILES[@]}"; do
   [[ -n "$profile" ]] || continue
   echo "Deleting connection profile: $profile"
   gcloud database-migration connection-profiles delete "$profile" \
-    --project="$PROJECT_ID" --region="$REGION" --quiet --no-async
+    --project="$PROJECT_ID" --region="$REGION" --quiet
 done
 
 echo
