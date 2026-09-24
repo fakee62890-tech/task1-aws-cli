@@ -32,6 +32,9 @@ echo "Zone: $ZONE"
 echo "Internal IP: $VM_IP"
 echo
 echo "postgres-vm par PostgreSQL 14 + pglogical configure hoga."
+read -r -s -p "Migration user password: " MIGRATION_PASSWORD
+printf '\n'
+[[ -n "$MIGRATION_PASSWORD" ]] || { echo "Password required hai." >&2; exit 1; }
 
 REMOTE_SCRIPT=$(cat <<'REMOTE'
 set -euo pipefail
@@ -75,9 +78,9 @@ CREATE EXTENSION IF NOT EXISTS pglogical;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'replication_user') THEN
-    CREATE ROLE replication_user LOGIN REPLICATION PASSWORD 'REDACTED';
+    CREATE ROLE replication_user LOGIN REPLICATION PASSWORD '__MIGRATION_PASSWORD__';
   ELSE
-    ALTER ROLE replication_user WITH LOGIN REPLICATION PASSWORD 'REDACTED';
+    ALTER ROLE replication_user WITH LOGIN REPLICATION PASSWORD '__MIGRATION_PASSWORD__';
   END IF;
 END
 $$;
@@ -111,6 +114,8 @@ echo "postgres-vm preparation complete. All public tables have primary keys."
 sudo -u postgres psql -d orders -At -c "SELECT extname FROM pg_extension WHERE extname='pglogical';"
 REMOTE
 )
+
+REMOTE_SCRIPT="${REMOTE_SCRIPT//__MIGRATION_PASSWORD__/$MIGRATION_PASSWORD}"
 
 PAYLOAD="$(printf '%s' "$REMOTE_SCRIPT" | base64 -w0)"
 gcloud compute ssh postgres-vm --project="$PROJECT_ID" --zone="$ZONE" \
