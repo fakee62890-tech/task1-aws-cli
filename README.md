@@ -11,3 +11,15 @@ bash <(curl -fsSL https://raw.githubusercontent.com/fakee62890-tech/task1-aws-cl
 ```
 
 When prompted, enter the lab-provided AWS Access Key ID and Secret Access Key, use `us-east-1` as the default region, and leave the output format blank.
+
+## Task 2 — Create the RDS source connection profile
+
+Run the Task 2 script in authenticated Google Cloud Shell:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/fakee62890-tech/task1-aws-cli/master/task2-create-source-profile.sh)
+```
+
+Enter the AWS RDS hostname when prompted. The script resolves its IPv4 address with `dig`, then creates the `mysql-rds-source` MySQL connection profile in `us-west1` using port `3306`, username `admin`, and the lab password (default `changeme`). It does not store credentials.
+
+The remaining migration-job wizard steps require the destination Cloud SQL instance details and should be completed after the lab provides them.
