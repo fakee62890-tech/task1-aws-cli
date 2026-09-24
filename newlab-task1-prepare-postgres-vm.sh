@@ -16,22 +16,24 @@ PROJECT_ID="$(gcloud config get-value project 2>/dev/null)"
   exit 1
 }
 
-ZONE="$(gcloud compute instances list --project="$PROJECT_ID" \
-  --filter='name=postgres-vm' --format='value(zone)' | head -n 1)"
+VM_NAME="$(gcloud compute instances list --project="$PROJECT_ID" \
+  --filter='name~^postgres(ql)?-vm$' --format='value(name)' | head -n 1)"
+ZONE="$(gcloud compute instances describe "$VM_NAME" --project="$PROJECT_ID" \
+  --format='value(zone)' 2>/dev/null || true)"
 [[ -n "$ZONE" ]] || {
-  echo "postgres-vm nahi mila. Lab project/VM check karo." >&2
+  echo "postgres-vm ya postgresql-vm nahi mila. Lab project/VM check karo." >&2
   exit 1
 }
 
-VM_IP="$(gcloud compute instances describe postgres-vm --project="$PROJECT_ID" \
+VM_IP="$(gcloud compute instances describe "$VM_NAME" --project="$PROJECT_ID" \
   --zone="$ZONE" --format='value(networkInterfaces[0].networkIP)')"
 
 echo "Project: $PROJECT_ID"
-echo "VM: postgres-vm"
+echo "VM: $VM_NAME"
 echo "Zone: $ZONE"
 echo "Internal IP: $VM_IP"
 echo
-echo "postgres-vm par PostgreSQL 14 + pglogical configure hoga."
+echo "$VM_NAME par PostgreSQL 14 + pglogical configure hoga."
 read -r -s -p "Migration user password: " MIGRATION_PASSWORD
 printf '\n'
 [[ -n "$MIGRATION_PASSWORD" ]] || { echo "Password required hai." >&2; exit 1; }
@@ -110,7 +112,7 @@ if [[ -n "$missing_keys" ]]; then
   exit 1
 fi
 
-echo "postgres-vm preparation complete. All public tables have primary keys."
+echo "PostgreSQL VM preparation complete. All public tables have primary keys."
 sudo -u postgres psql -d orders -At -c "SELECT extname FROM pg_extension WHERE extname='pglogical';"
 REMOTE
 )
@@ -118,7 +120,7 @@ REMOTE
 REMOTE_SCRIPT="${REMOTE_SCRIPT//__MIGRATION_PASSWORD__/$MIGRATION_PASSWORD}"
 
 PAYLOAD="$(printf '%s' "$REMOTE_SCRIPT" | base64 -w0)"
-gcloud compute ssh postgres-vm --project="$PROJECT_ID" --zone="$ZONE" \
+gcloud compute ssh "$VM_NAME" --project="$PROJECT_ID" --zone="$ZONE" \
   --command="echo '$PAYLOAD' | base64 -d | sudo bash"
 
 echo
