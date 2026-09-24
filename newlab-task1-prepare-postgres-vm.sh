@@ -16,8 +16,14 @@ PROJECT_ID="$(gcloud config get-value project 2>/dev/null)"
   exit 1
 }
 
-VM_NAME="$(gcloud compute instances list --project="$PROJECT_ID" \
-  --format='value(name)' | grep -E '^(postgres-vm|postgresql-vm)$' | head -n 1 || true)"
+VM_NAME=""
+for candidate in postgresql-vm postgres-vm; do
+  if gcloud compute instances describe "$candidate" --project="$PROJECT_ID" \
+      --zone=europe-west4-a >/dev/null 2>&1; then
+    VM_NAME="$candidate"
+    break
+  fi
+done
 ZONE="$(gcloud compute instances describe "$VM_NAME" --project="$PROJECT_ID" \
   --format='value(zone)' 2>/dev/null || true)"
 [[ -n "$ZONE" ]] || {
